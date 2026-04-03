@@ -43,7 +43,7 @@ if(EXISTS "${LLAMA_DIR}/CMakeLists.txt")
     message(STATUS "ExynNix: llama.cpp found at ${LLAMA_DIR} — enabling real inference")
 
     # Exynos 990 backend flags for llama.cpp
-    set(GGML_VULKAN        ON  CACHE BOOL "Enable Vulkan (Mali-G77)" FORCE)
+    set(GGML_VULKAN        OFF CACHE BOOL "Enable Vulkan (Mali-G77)" FORCE)  # vulkan.hpp not in Android NDK — use CPU only for now
     set(GGML_OPENMP        OFF CACHE BOOL "" FORCE)
     set(GGML_BLAS          OFF CACHE BOOL "" FORCE)
     set(GGML_CUDA          OFF CACHE BOOL "" FORCE)
