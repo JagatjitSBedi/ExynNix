@@ -113,6 +113,7 @@ dependencies {
     implementation(libs.androidx.datastore)
     implementation(libs.accompanist.permissions)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.androidx.appcompat)
 
     ksp(libs.androidx.room.compiler)
     ksp(libs.hilt.compiler)
