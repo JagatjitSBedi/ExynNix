@@ -19,10 +19,6 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        ndk {
-            abiFilters += listOf("arm64-v8a")   // S20 Ultra only; pure ARM64
-        }
-
         externalNativeBuild {
             cmake {
                 cppFlags += listOf(
@@ -89,14 +85,8 @@ android {
         }
     }
 
-    splits {
-        abi {
-            isEnable = true
-            reset()
-            include("arm64-v8a")
-            isUniversalApk = false
-        }
-    }
+    // Single ABI via externalNativeBuild cmake abiFilters only
+    // (ndk{} and splits{} conflict — use cmake argument instead)
 }
 
 dependencies {
