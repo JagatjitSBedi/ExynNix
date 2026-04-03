@@ -1,7 +1,7 @@
-import kotlin.ranges.ClosedFloatingPointRange
 package com.exynix.studio.ui.screens
 
 import androidx.compose.foundation.background
+import kotlin.ranges.ClosedFloatingPointRange
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
