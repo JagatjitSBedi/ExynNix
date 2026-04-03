@@ -1,7 +1,5 @@
 package com.exynix.studio.data.models
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
 import java.util.UUID
 
 // ── Hardware profile ─────────────────────────────────────────────────────────
@@ -59,9 +57,8 @@ enum class ModelFormat { GGUF, PTE, ONNX, TFLITE, UNKNOWN }
 
 enum class ModelStatus { NOT_DOWNLOADED, DOWNLOADING, READY, LOADING, RUNNING, ERROR }
 
-@Entity(tableName = "models")
 data class ModelEntry(
-    @PrimaryKey val id: String = UUID.randomUUID().toString(),
+    val id: String = UUID.randomUUID().toString(),
     val name: String,
     val family: String,           // llama3, gemma, mistral, phi, qwen, etc.
     val paramCount: String,       // "7B", "3B", "1.5B"
@@ -114,9 +111,8 @@ data class InferenceStats(
 
 // ── Chat ─────────────────────────────────────────────────────────────────────
 
-@Entity(tableName = "chat_messages")
 data class ChatMessage(
-    @PrimaryKey val id: String = UUID.randomUUID().toString(),
+    val id: String = UUID.randomUUID().toString(),
     val sessionId: String,
     val role: String,              // "user" | "assistant" | "system"
     val content: String,

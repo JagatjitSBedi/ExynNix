@@ -4,9 +4,7 @@ import android.app.*
 import android.content.Intent
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
-import dagger.hilt.android.AndroidEntryPoint
 
-@AndroidEntryPoint
 class ModelDownloadService : Service() {
 
     companion object {
