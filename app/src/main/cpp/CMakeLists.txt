@@ -18,6 +18,9 @@ add_compile_options(
     -DARM_NEON
     -DEXYNIX_TARGET_S20_ULTRA
     -DEXYNIX_EXYNOS_990
+    # Suppress format-security warnings (cross-compile noise)
+    -Wno-format-security
+    -Wno-format
 )
 
 # ──────────────────────────────────────────────────────────────────────────────
