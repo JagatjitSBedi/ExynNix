@@ -11,10 +11,10 @@
 #include <thread>
 #include <cmath>
 
-#if __has_include("../llama/llama.h")
+#if __has_include(<llama.h>)
 #define HAVE_LLAMA_CPP 1
-#include "../llama/llama.h"
-#include "../llama/ggml-vulkan.h"
+#include <llama.h>
+#include <ggml-vulkan.h>
 #endif
 
 #define LOG_TAG "ExynNix-Vulkan"

@@ -22,9 +22,9 @@
 #include <sstream>
 
 // Conditionally include llama.cpp if available
-#if __has_include("../llama/llama.h")
+#if __has_include(<llama.h>)
 #define HAVE_LLAMA_CPP 1
-#include "../llama/llama.h"
+#include <llama.h>
 #endif
 
 #define LOG_TAG "ExynNix-CPU"

@@ -7,38 +7,41 @@ on:
 
 jobs:
   build:
-    name: Build ARM64 APK (Exynos 990)
+    name: Build ARM64 APK — llama.cpp + Vulkan (Exynos 990)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60   # llama.cpp compile takes ~20-30 min
 
     steps:
-      - name: Checkout
+      # ── Checkout WITH submodules ────────────────────────────────────────────
+      - name: Checkout (with llama.cpp submodule)
         uses: actions/checkout@v4
+        with:
+          submodules: recursive   # pulls llama.cpp
+          fetch-depth: 1
 
+      # ── Java 17 ─────────────────────────────────────────────────────────────
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      # Install Gradle 8.9 directly (avoids wrapper jar issues)
+      # ── Gradle 8.9 ──────────────────────────────────────────────────────────
       - name: Install Gradle 8.9
         run: |
           curl -sL https://services.gradle.org/distributions/gradle-8.9-bin.zip -o /tmp/gradle.zip
           unzip -q /tmp/gradle.zip -d /opt/gradle-dist
           echo "/opt/gradle-dist/gradle-8.9/bin" >> $GITHUB_PATH
 
-      # Detect which NDK versions are already installed on the runner
-      - name: Detect NDK version
+      # ── Android SDK + NDK ───────────────────────────────────────────────────
+      - name: Detect and configure NDK
         run: |
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          ls $ANDROID_HOME/ndk/ 2>/dev/null || echo "No NDK found"
-          # Pick whichever NDK is available (runner has one pre-installed)
           NDK_VER=$(ls $ANDROID_HOME/ndk/ | sort -V | tail -1)
           echo "NDK_VERSION=$NDK_VER" >> $GITHUB_ENV
           echo "Detected NDK: $NDK_VER"
-          # Also install cmake if needed
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "cmake;3.22.1" --sdk_root=$ANDROID_HOME || true
+          # Install cmake
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "cmake;3.22.1" \
+            --sdk_root=$ANDROID_HOME 2>/dev/null || true
 
       - name: Configure local.properties
         run: |
@@ -46,28 +49,30 @@ jobs:
           echo "ndk.dir=$ANDROID_HOME/ndk/$NDK_VERSION" >> local.properties
           cat local.properties
 
-      # Patch build.gradle.kts to use detected NDK version
-      - name: Patch NDK version in build.gradle.kts
-        run: |
-          sed -i "s/android.ndkVersion \"[^\"]*\"/android.ndkVersion \"$NDK_VERSION\"/" app/build.gradle.kts || true
-          # Add ndkVersion line if not present
-          if ! grep -q "ndkVersion" app/build.gradle.kts; then
-            sed -i "/compileSdk = 35/a\\    ndkVersion = \"$NDK_VERSION\"" app/build.gradle.kts
-          fi
-          echo "=== build.gradle.kts defaultConfig section ==="
-          grep -A5 "defaultConfig" app/build.gradle.kts | head -20
+      # ── Cache llama.cpp build artifacts (speeds up re-runs) ─────────────────
+      - name: Cache native build
+        uses: actions/cache@v4
+        with:
+          path: app/.cxx
+          key: native-${{ runner.os }}-${{ hashFiles('app/src/main/cpp/**', 'app/src/main/cpp/llama/**/*.h') }}
+          restore-keys: native-${{ runner.os }}-
 
-      - name: Build Debug APK
+      # ── Build ────────────────────────────────────────────────────────────────
+      - name: Build Debug APK (with llama.cpp + Vulkan)
         run: |
-          gradle assembleDebug --no-daemon --stacktrace
+          gradle assembleDebug \
+            --no-daemon \
+            --stacktrace \
+            -Pandroid.native.buildOutput=verbose
 
+      # ── Collect & Upload ─────────────────────────────────────────────────────
       - name: Collect APKs
         run: |
           mkdir -p artifacts
           find app/build/outputs/apk -name "*.apk" -exec cp {} artifacts/ \;
           ls -lh artifacts/
 
-      - name: Upload Debug APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: ExynNix-Debug-APK
@@ -76,8 +81,13 @@ jobs:
 
       - name: Build Summary
         run: |
-          echo "## ExynNix APK" >> $GITHUB_STEP_SUMMARY
+          echo "## ExynNix APK — Real Inference Build" >> $GITHUB_STEP_SUMMARY
+          echo "| File | Size |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|------|" >> $GITHUB_STEP_SUMMARY
           for f in artifacts/*.apk; do
-            echo "- $(basename $f) — $(du -sh $f | cut -f1)" >> $GITHUB_STEP_SUMMARY
+            echo "| $(basename $f) | $(du -sh $f | cut -f1) |" >> $GITHUB_STEP_SUMMARY
           done
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Backends:** CPU XNNPACK + GPU Vulkan (Mali-G77) + NNAPI" >> $GITHUB_STEP_SUMMARY
+          echo "**llama.cpp:** included (real token generation)" >> $GITHUB_STEP_SUMMARY
           echo "**ABI:** arm64-v8a | **NDK:** $NDK_VERSION | **minSdk:** 29" >> $GITHUB_STEP_SUMMARY

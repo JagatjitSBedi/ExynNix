@@ -18,7 +18,6 @@ add_compile_options(
     -DARM_NEON
     -DEXYNIX_TARGET_S20_ULTRA
     -DEXYNIX_EXYNOS_990
-    # Suppress format-security warnings (cross-compile noise)
     -Wno-format-security
     -Wno-format
 )
@@ -35,7 +34,42 @@ find_library(egl-lib          EGL)
 find_library(gles3-lib        GLESv3)
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Sources
+# llama.cpp integration (via its own CMake system)
+# ──────────────────────────────────────────────────────────────────────────────
+set(LLAMA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/llama")
+
+if(EXISTS "${LLAMA_DIR}/CMakeLists.txt")
+    message(STATUS "ExynNix: llama.cpp found at ${LLAMA_DIR} — enabling real inference")
+
+    # Exynos 990 backend flags for llama.cpp
+    set(GGML_VULKAN        ON  CACHE BOOL "Enable Vulkan (Mali-G77)" FORCE)
+    set(GGML_OPENMP        OFF CACHE BOOL "" FORCE)
+    set(GGML_BLAS          OFF CACHE BOOL "" FORCE)
+    set(GGML_CUDA          OFF CACHE BOOL "" FORCE)
+    set(GGML_METAL         OFF CACHE BOOL "" FORCE)
+    set(GGML_SYCL          OFF CACHE BOOL "" FORCE)
+    set(LLAMA_BUILD_TESTS  OFF CACHE BOOL "" FORCE)
+    set(LLAMA_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+    set(LLAMA_BUILD_SERVER OFF CACHE BOOL "" FORCE)
+    set(BUILD_SHARED_LIBS  OFF CACHE BOOL "" FORCE)
+
+    add_subdirectory(${LLAMA_DIR} llama_build)
+
+    add_compile_definitions(HAVE_LLAMA_CPP=1)
+    set(LLAMA_LIBS llama ggml)
+    set(LLAMA_INCLUDES
+        ${LLAMA_DIR}/include
+        ${LLAMA_DIR}/ggml/include
+        ${LLAMA_DIR}/src
+    )
+else()
+    message(STATUS "ExynNix: llama.cpp NOT found — building stub mode")
+    set(LLAMA_LIBS "")
+    set(LLAMA_INCLUDES "")
+endif()
+
+# ──────────────────────────────────────────────────────────────────────────────
+# ExynNix bridge sources
 # ──────────────────────────────────────────────────────────────────────────────
 set(BRIDGE_SRCS
     bridge/exynix_jni.cpp
@@ -48,7 +82,6 @@ set(BRIDGE_SRCS
     bridge/benchmark_runner.cpp
     bridge/thermal_monitor.cpp
     bridge/memory_tracker.cpp
-    # inference_session.h is a pure interface header — no .cpp needed
 )
 
 add_library(exynix_native SHARED ${BRIDGE_SRCS})
@@ -56,8 +89,7 @@ add_library(exynix_native SHARED ${BRIDGE_SRCS})
 target_include_directories(exynix_native PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/bridge
     ${CMAKE_SOURCE_DIR}
-    # NDK NNAPI headers (location varies by NDK version)
-    ${ANDROID_NDK}/toolchains/llvm/prebuilt/${ANDROID_HOST_TAG}/sysroot/usr/include
+    ${LLAMA_INCLUDES}
     ${ANDROID_SYSROOT}/usr/include
 )
 
@@ -69,24 +101,22 @@ target_link_libraries(exynix_native
     ${vulkan-lib}
     ${egl-lib}
     ${gles3-lib}
+    ${LLAMA_LIBS}
 )
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Compile definitions by capability
+# Feature flags
 # ──────────────────────────────────────────────────────────────────────────────
 option(EXYNIX_BUILD_VULKAN  "Enable Mali-G77 Vulkan backend"  ON)
-option(EXYNIX_BUILD_NNAPI   "Enable NNAPI (CPU/GPU/NPU delegate)" ON)
-option(EXYNIX_BUILD_XNNPACK "Enable XNNPACK CPU backend"     ON)
+option(EXYNIX_BUILD_NNAPI   "Enable NNAPI delegate"           ON)
+option(EXYNIX_BUILD_XNNPACK "Enable XNNPACK CPU backend"      ON)
 
 if(EXYNIX_BUILD_VULKAN)
-    target_compile_definitions(exynix_native PRIVATE EXYNIX_VULKAN=1)
-    target_compile_definitions(exynix_native PRIVATE MALI_G77=1)
+    target_compile_definitions(exynix_native PRIVATE EXYNIX_VULKAN=1 MALI_G77=1)
 endif()
-
 if(EXYNIX_BUILD_NNAPI)
     target_compile_definitions(exynix_native PRIVATE EXYNIX_NNAPI=1)
 endif()
-
 if(EXYNIX_BUILD_XNNPACK)
     target_compile_definitions(exynix_native PRIVATE EXYNIX_XNNPACK=1)
 endif()
