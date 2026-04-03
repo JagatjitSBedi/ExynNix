@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.unit.dp
@@ -13,13 +14,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.exynix.studio.ui.screens.*
 import com.exynix.studio.ui.theme.*
 import com.exynix.studio.viewmodel.MainViewModel
-import dagger.hilt.android.AndroidEntryPoint
 
-@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,7 +48,9 @@ val topLevelScreens = listOf(
 
 @Composable
 fun ExynNixMainApp() {
-    val vm: MainViewModel = hiltViewModel()
+    val vm: MainViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+        factory = com.exynix.studio.viewmodel.MainViewModelFactory(LocalContext.current.applicationContext as android.app.Application)
+    )
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Dashboard) }
 
     Scaffold(

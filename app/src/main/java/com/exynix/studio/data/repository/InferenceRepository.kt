@@ -4,21 +4,17 @@ import android.content.Context
 import android.util.Log
 import com.exynix.studio.data.models.*
 import com.exynix.studio.inference.jni.InferenceJni
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import org.json.JSONObject
 import java.io.File
 import java.io.IOException
 import java.net.URL
-import javax.inject.Inject
-import javax.inject.Singleton
 
 private const val TAG = "ExynNix-Repo"
 
-@Singleton
-class InferenceRepository @Inject constructor(
-    @ApplicationContext private val context: Context
+class InferenceRepository constructor(
+    private val context: Context
 ) {
 
     private val _models = MutableStateFlow<List<ModelEntry>>(ModelCatalog.recommended)

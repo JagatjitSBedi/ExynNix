@@ -4,12 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.exynix.studio.data.models.*
 import com.exynix.studio.data.repository.InferenceRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import javax.inject.Inject
 
-@HiltViewModel
 class MainViewModel @Inject constructor(
     private val repo: InferenceRepository
 ) : ViewModel() {
