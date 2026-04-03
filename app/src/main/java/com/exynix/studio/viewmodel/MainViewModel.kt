@@ -7,7 +7,7 @@ import com.exynix.studio.data.repository.InferenceRepository
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
-class MainViewModel @Inject constructor(
+class MainViewModel constructor(
     private val repo: InferenceRepository
 ) : ViewModel() {
 
