@@ -122,7 +122,7 @@ fun ChatScreen(vm: MainViewModel) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp, vertical = 8.dp)
-                    .navigationBarsPadding(),
+                    ,
                 verticalAlignment = Alignment.Bottom,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -141,9 +141,8 @@ fun ChatScreen(vm: MainViewModel) {
                         unfocusedBorderColor = Divider,
                         focusedTextColor = TextPrimary,
                         unfocusedTextColor = TextPrimary,
-                        cursorColor = ExBlue,
-                        containerColor = Surface3
-                    ),
+                        cursorColor = ExBlue
+),
                     shape = RoundedCornerShape(12.dp),
                     maxLines = 4,
                     enabled = uiState.isModelLoaded && !uiState.isGenerating
@@ -161,7 +160,6 @@ fun ChatScreen(vm: MainViewModel) {
                     },
                     enabled = canSend,
                     colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = ExBlue,
                         disabledContainerColor = Surface3
                     ),
                     modifier = Modifier.size(48.dp)

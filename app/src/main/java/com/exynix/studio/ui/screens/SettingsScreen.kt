@@ -1,3 +1,4 @@
+import kotlin.ranges.ClosedFloatingPointRange
 package com.exynix.studio.ui.screens
 
 import androidx.compose.foundation.background
@@ -134,9 +135,8 @@ fun SettingsScreen(vm: MainViewModel) {
                         unfocusedBorderColor = Divider,
                         focusedTextColor = TextPrimary,
                         unfocusedTextColor = TextPrimary,
-                        cursorColor = ExBlue,
-                        containerColor = Surface3
-                    ),
+                        cursorColor = ExBlue
+),
                     shape = RoundedCornerShape(10.dp)
                 )
             }

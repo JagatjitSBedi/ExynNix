@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ExynNixTheme {
-                ExynNixApp()
+                ExynNixMainApp()
             }
         }
     }
@@ -49,7 +49,7 @@ val topLevelScreens = listOf(
 )
 
 @Composable
-fun ExynNixApp() {
+fun ExynNixMainApp() {
     val vm: MainViewModel = hiltViewModel()
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Dashboard) }
 
