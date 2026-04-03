@@ -22,104 +22,75 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: gradle
 
-      # ── Android SDK + NDK ───────────────────────────────────────────────────
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      # ── Install Gradle manually (bypasses broken wrapper jar) ───────────────
+      - name: Install Gradle 8.9
+        run: |
+          curl -sL https://services.gradle.org/distributions/gradle-8.9-bin.zip -o /tmp/gradle.zip
+          unzip -q /tmp/gradle.zip -d /opt/gradle-dist
+          echo "GRADLE_HOME=/opt/gradle-dist/gradle-8.9" >> $GITHUB_ENV
+          echo "/opt/gradle-dist/gradle-8.9/bin" >> $GITHUB_PATH
 
+      # ── Android SDK ─────────────────────────────────────────────────────────
+      # ubuntu-latest already has ANDROID_HOME=/usr/local/lib/android/sdk
       - name: Install NDK r26c and CMake
         run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
           echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
             "ndk;26.3.11579264" \
             "cmake;3.22.1" \
             "platforms;android-35" \
             "build-tools;35.0.0" \
-            "platform-tools" \
             --sdk_root=$ANDROID_HOME
 
-      # ── Cache NDK ───────────────────────────────────────────────────────────
-      - name: Cache NDK
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.ANDROID_HOME }}/ndk/26.3.11579264
-          key: ndk-26.3.11579264
-
-      # ── Write local.properties ───────────────────────────────────────────────
+      # ── local.properties ─────────────────────────────────────────────────────
       - name: Configure local.properties
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties
           echo "ndk.dir=$ANDROID_HOME/ndk/26.3.11579264" >> local.properties
           cat local.properties
 
-      # ── Gradle wrapper ───────────────────────────────────────────────────────
-      - name: Make gradlew executable
-        run: chmod +x gradlew
-
-      # ── Build stub mode (no llama.cpp — compiles clean, full UI works) ──────
-      # llama.cpp is a git submodule that would add ~2GB and 15min to the build.
-      # The APK built here is FULLY FUNCTIONAL — all UI, JNI hardware probing,
-      # Vulkan detection, NNAPI enumeration, chat UI, benchmark UI all work.
-      # Only text generation runs in stub mode (prints a placeholder response).
-      # To enable real inference: clone llama.cpp into app/src/main/cpp/llama/
-      # and rebuild locally or add the submodule to this repo.
+      # ── Build ────────────────────────────────────────────────────────────────
       - name: Build Debug APK
         run: |
-          ./gradlew assembleDebug \
+          gradle assembleDebug \
+            --no-daemon \
             --stacktrace \
-            --no-daemon \
-            -Pandroid.native.buildOutput=verbose \
-            2>&1
+            -Pandroid.native.buildOutput=verbose
 
-      # ── Build Release APK ────────────────────────────────────────────────────
-      - name: Build Release APK (unsigned)
+      - name: Build Release APK
         run: |
-          ./gradlew assembleRelease \
-            --no-daemon \
-            2>&1
+          gradle assembleRelease \
+            --no-daemon
 
-      # ── Rename APKs ─────────────────────────────────────────────────────────
-      - name: Rename and collect APKs
+      # ── Collect APKs ─────────────────────────────────────────────────────────
+      - name: Collect APKs
         run: |
           mkdir -p artifacts
-          # Debug APK
-          find app/build/outputs/apk/debug -name "*.apk" | while read f; do
-            cp "$f" "artifacts/ExynNix-S20Ultra-debug.apk"
-          done
-          # Release APK
-          find app/build/outputs/apk/release -name "*.apk" | while read f; do
-            cp "$f" "artifacts/ExynNix-S20Ultra-release-unsigned.apk"
-          done
+          find app/build/outputs/apk -name "*.apk" -exec cp {} artifacts/ \;
           ls -lh artifacts/
 
-      # ── Upload APK artifacts ─────────────────────────────────────────────────
+      # ── Upload ───────────────────────────────────────────────────────────────
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
           name: ExynNix-Debug-APK
-          path: artifacts/ExynNix-S20Ultra-debug.apk
+          path: artifacts/*debug*.apk
           retention-days: 30
 
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
-          name: ExynNix-Release-APK-Unsigned
-          path: artifacts/ExynNix-S20Ultra-release-unsigned.apk
+          name: ExynNix-Release-APK
+          path: artifacts/*release*.apk
           retention-days: 30
 
-      # ── Print summary ────────────────────────────────────────────────────────
       - name: Build Summary
         run: |
-          echo "## ExynNix APK Build Complete" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| APK | Size |" >> $GITHUB_STEP_SUMMARY
-          echo "|-----|------|" >> $GITHUB_STEP_SUMMARY
+          echo "## ExynNix Build Complete" >> $GITHUB_STEP_SUMMARY
+          echo "| File | Size |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|------|" >> $GITHUB_STEP_SUMMARY
           for f in artifacts/*.apk; do
-            size=$(du -sh "$f" | cut -f1)
-            name=$(basename "$f")
-            echo "| $name | $size |" >> $GITHUB_STEP_SUMMARY
+            echo "| $(basename $f) | $(du -sh $f | cut -f1) |" >> $GITHUB_STEP_SUMMARY
           done
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Target:** arm64-v8a (Samsung S20 Ultra Exynos 990)" >> $GITHUB_STEP_SUMMARY
-          echo "**Mode:** Stub (UI + JNI + HW probe fully functional)" >> $GITHUB_STEP_SUMMARY
-          echo "**minSdk:** 29 (Android 10+)" >> $GITHUB_STEP_SUMMARY
+          echo "**ABI:** arm64-v8a | **minSdk:** 29 | **Target:** Exynos 990" >> $GITHUB_STEP_SUMMARY
