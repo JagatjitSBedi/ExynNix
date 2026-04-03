@@ -12,6 +12,7 @@ add_compile_options(
     -march=armv8.2-a+dotprod+fp16
     -mtune=cortex-a77
     -ffast-math
+    -fno-finite-math-only   # Required by llama.cpp/ggml — must override -ffast-math
     -funroll-loops
     -fomit-frame-pointer
     -DANDROID
