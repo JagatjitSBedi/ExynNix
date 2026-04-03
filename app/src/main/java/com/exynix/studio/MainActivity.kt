@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -69,7 +70,7 @@ fun ExynNixApp() {
                                 contentDescription = screen.label
                             )
                         },
-                        label = { Text(screen.label, fontSize = androidx.compose.ui.unit.TextUnit.Unspecified) },
+                        label = { Text(screen.label) },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = ExBlue,
                             selectedTextColor = ExBlue,

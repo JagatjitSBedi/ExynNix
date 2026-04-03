@@ -4,6 +4,7 @@ import androidx.compose.animation.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -60,7 +61,7 @@ fun ModelManagerScreen(vm: MainViewModel, onNavigateToChat: () -> Unit) {
                 contentPadding = PaddingValues(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(InferenceBackend.entries.toList()) { b ->
+                items(InferenceBackend.values().toList()) { b ->
                     val selected = selectedBackend == b
                     Surface(
                         modifier = Modifier.clickable { selectedBackend = b },
