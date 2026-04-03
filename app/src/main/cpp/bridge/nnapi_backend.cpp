@@ -10,7 +10,11 @@
 #include <sstream>
 
 #ifdef EXYNIX_NNAPI
+#if __has_include(<NeuralNetworks.h>)
 #include <NeuralNetworks.h>
+#else
+#undef EXYNIX_NNAPI
+#endif
 #endif
 
 #define LOG_TAG "ExynNix-NNAPI"

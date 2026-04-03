@@ -23,12 +23,20 @@
 #include <dlfcn.h>
 
 #ifdef EXYNIX_NNAPI
+#if __has_include(<NeuralNetworks.h>)
 #include <NeuralNetworks.h>
+#else
+#undef EXYNIX_NNAPI
+#endif
 #endif
 
 #ifdef EXYNIX_VULKAN
+#if __has_include(<vulkan/vulkan.h>)
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_android.h>
+#else
+#undef EXYNIX_VULKAN
+#endif
 #endif
 
 #define LOG_TAG "ExynNix-HWProbe"

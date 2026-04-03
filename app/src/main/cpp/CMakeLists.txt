@@ -53,6 +53,9 @@ add_library(exynix_native SHARED ${BRIDGE_SRCS})
 target_include_directories(exynix_native PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/bridge
     ${CMAKE_SOURCE_DIR}
+    # NDK NNAPI headers (location varies by NDK version)
+    ${ANDROID_NDK}/toolchains/llvm/prebuilt/${ANDROID_HOST_TAG}/sysroot/usr/include
+    ${ANDROID_SYSROOT}/usr/include
 )
 
 target_link_libraries(exynix_native
