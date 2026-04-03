@@ -42,10 +42,10 @@ set(BRIDGE_SRCS
     bridge/nnapi_backend.cpp
     bridge/cpu_backend.cpp
     bridge/tokenizer.cpp
-    bridge/inference_session.cpp
     bridge/benchmark_runner.cpp
     bridge/thermal_monitor.cpp
     bridge/memory_tracker.cpp
+    # inference_session.h is a pure interface header — no .cpp needed
 )
 
 add_library(exynix_native SHARED ${BRIDGE_SRCS})
