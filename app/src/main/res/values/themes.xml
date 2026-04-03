@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.ExynNix" parent="android:Theme.Material.NoTitleBar">
+        <item name="android:windowBackground">@color/black</item>
+        <item name="android:statusBarColor">#0A0E1A</item>
+        <item name="android:navigationBarColor">#101624</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>
